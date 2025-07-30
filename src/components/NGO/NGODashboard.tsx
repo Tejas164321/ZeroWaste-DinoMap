@@ -1,0 +1,274 @@
+import React, { useState, useEffect } from 'react';
+import { Map, List, Navigation, Heart, Package, TrendingUp } from 'lucide-react';
+import { collection, query, where, orderBy, onSnapshot, doc, updateDoc } from 'firebase/firestore';
+import { db } from '../../config/firebase';
+import { useAuth } from '../../hooks/useAuth';
+import { FoodDonation } from '../../types';
+import { Navbar } from '../Layout/Navbar';
+import { FoodMap } from './FoodMap';
+import { DonationListItem } from './DonationListItem';
+
+export const NGODashboard: React.FC = () => {
+  const { user } = useAuth();
+  const [donations, setDonations] = useState<FoodDonation[]>([]);
+  const [filteredDonations, setFilteredDonations] = useState<FoodDonation[]>([]);
+  const [selectedDonation, setSelectedDonation] = useState<FoodDonation | null>(null);
+  const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
+  const [filter, setFilter] = useState('all');
+  const [loading, setLoading] = useState(true);
+  const [myDonations, setMyDonations] = useState<FoodDonation[]>([]);
+
+  useEffect(() => {
+    // Listen to all available donations
+    const q = query(
+      collection(db, 'donations'),
+      where('status', 'in', ['available', 'claimed']),
+      orderBy('createdAt', 'desc')
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const donationsData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as FoodDonation[];
+      
+      setDonations(donationsData);
+      setLoading(false);
+    });
+
+    return unsubscribe;
+  }, []);
+
+  useEffect(() => {
+    if (!user) return;
+
+    // Listen to donations claimed by this NGO
+    const q = query(
+      collection(db, 'donations'),
+      where('claimedBy', '==', user.uid),
+      orderBy('createdAt', 'desc')
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const myDonationsData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as FoodDonation[];
+      
+      setMyDonations(myDonationsData);
+    });
+
+    return unsubscribe;
+  }, [user]);
+
+  useEffect(() => {
+    let filtered = donations;
+
+    switch (filter) {
+      case 'available':
+        filtered = donations.filter(d => d.status === 'available' && new Date(d.expiryTime) > new Date());
+        break;
+      case 'claimed':
+        filtered = donations.filter(d => d.status === 'claimed');
+        break;
+      case 'mine':
+        filtered = myDonations;
+        break;
+      default:
+        // Show all donations that are not expired
+        filtered = donations.filter(d => new Date(d.expiryTime) > new Date());
+    }
+
+    setFilteredDonations(filtered);
+  }, [donations, myDonations, filter]);
+
+  const handleClaimDonation = async (donation: FoodDonation) => {
+    if (!user || donation.status !== 'available') return;
+
+    try {
+      await updateDoc(doc(db, 'donations', donation.id), {
+        status: 'claimed',
+        claimedBy: user.uid,
+        claimedByName: user.displayName,
+        claimedAt: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error('Error claiming donation:', error);
+    }
+  };
+
+  const handleViewRoute = (donation: FoodDonation) => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((position) => {
+        const { latitude, longitude } = position.coords;
+        const url = `https://www.google.com/maps/dir/${latitude},${longitude}/${donation.location.lat},${donation.location.lng}`;
+        window.open(url, '_blank');
+      });
+    } else {
+      const url = `https://www.google.com/maps/search/${donation.location.address}`;
+      window.open(url, '_blank');
+    }
+  };
+
+  const stats = {
+    available: donations.filter(d => d.status === 'available' && new Date(d.expiryTime) > new Date()).length,
+    claimed: myDonations.filter(d => d.status === 'claimed').length,
+    completed: myDonations.filter(d => d.status === 'picked').length,
+    total: myDonations.length,
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navbar title="NGO Dashboard" />
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Navbar title="NGO Dashboard" />
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center">
+              <Package className="h-8 w-8 text-green-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Available</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.available}</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center">
+              <TrendingUp className="h-8 w-8 text-orange-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">My Claims</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.claimed}</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center">
+              <Heart className="h-8 w-8 text-purple-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Completed</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.completed}</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center">
+              <Navigation className="h-8 w-8 text-blue-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Total Impact</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Controls */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-4 sm:space-y-0">
+          <div className="flex space-x-2">
+            <button
+              onClick={() => setViewMode('map')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                viewMode === 'map'
+                  ? 'bg-green-600 text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <Map className="h-4 w-4" />
+              <span>Map View</span>
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                viewMode === 'list'
+                  ? 'bg-green-600 text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <List className="h-4 w-4" />
+              <span>List View</span>
+            </button>
+          </div>
+
+          <select
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white"
+          >
+            <option value="all">All Available</option>
+            <option value="available">Available Now</option>
+            <option value="claimed">Claimed</option>
+            <option value="mine">My Donations</option>
+          </select>
+        </div>
+
+        {/* Content */}
+        <div className="bg-white rounded-lg shadow">
+          {viewMode === 'map' ? (
+            <div className="p-6">
+              <FoodMap
+                donations={filteredDonations}
+                onMarkerClick={setSelectedDonation}
+                selectedDonation={selectedDonation}
+              />
+              {selectedDonation && (
+                <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                  <h3 className="font-semibold text-lg mb-2">{selectedDonation.title}</h3>
+                  <p className="text-gray-600 mb-2">{selectedDonation.description}</p>
+                  <div className="flex space-x-4">
+                    <button
+                      onClick={() => handleViewRoute(selectedDonation)}
+                      className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                    >
+                      <Navigation className="h-4 w-4" />
+                      <span>Get Directions</span>
+                    </button>
+                    {selectedDonation.status === 'available' && (
+                      <button
+                        onClick={() => handleClaimDonation(selectedDonation)}
+                        className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors"
+                      >
+                        Claim Donation
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="p-6">
+              {filteredDonations.length === 0 ? (
+                <div className="text-center py-12">
+                  <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No donations found</h3>
+                  <p className="text-gray-600">Try adjusting your filters or check back later.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredDonations.map((donation) => (
+                    <DonationListItem
+                      key={donation.id}
+                      donation={donation}
+                      onClaim={handleClaimDonation}
+                      onViewRoute={handleViewRoute}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
