@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Map, List, Navigation, Heart, Package, TrendingUp, Route } from 'lucide-react';
 import { collection, query, where, orderBy, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../config/firebase';
@@ -22,6 +22,8 @@ export const NGODashboard: React.FC = () => {
   const [showMultiSelector, setShowMultiSelector] = useState(false);
   const [showRouteTracker, setShowRouteTracker] = useState(false);
   const [selectedRouteData, setSelectedRouteData] = useState<FoodDonation[]>([]);
+  const [notification, setNotification] = useState<string | null>(null);
+  const prevDonationsRef = useRef<FoodDonation[]>([]);
 
   useEffect(() => {
     // Listen to all available donations
@@ -36,7 +38,18 @@ export const NGODashboard: React.FC = () => {
         id: doc.id,
         ...doc.data()
       })) as FoodDonation[];
-      
+
+      // Detect new donations
+      const prevDonations = prevDonationsRef.current;
+      const newDonations = donationsData.filter(d => !prevDonations.some(pd => pd.id === d.id));
+
+      if (newDonations.length > 0) {
+        setNotification(`New donation${newDonations.length > 1 ? 's' : ''} added!`);
+        // Clear notification after 5 seconds
+        setTimeout(() => setNotification(null), 5000);
+      }
+
+      prevDonationsRef.current = donationsData;
       setDonations(donationsData);
       setLoading(false);
     });
@@ -164,7 +177,20 @@ export const NGODashboard: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar title="NGO Dashboard" />
-      
+
+      {notification && (
+        <div className="fixed top-16 right-4 bg-green-600 text-white px-4 py-2 rounded shadow-lg z-50">
+          {notification}
+          <button
+            onClick={() => setNotification(null)}
+            className="ml-4 font-bold"
+            aria-label="Dismiss notification"
+          >
+            ×
+          </button>
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
