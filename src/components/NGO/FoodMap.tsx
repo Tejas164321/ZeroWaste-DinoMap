@@ -114,6 +114,7 @@ export const FoodMap: React.FC<FoodMapProps> = ({ donations, onMarkerClick, sele
         position: { lat: donation.location.lat, lng: donation.location.lng },
         map: mapInstanceRef.current,
         title: donation.title,
+        animation: window.google.maps.Animation.DROP,
         icon: {
           url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
             <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -127,12 +128,15 @@ export const FoodMap: React.FC<FoodMapProps> = ({ donations, onMarkerClick, sele
 
       const infoWindow = new window.google.maps.InfoWindow({
         content: `
-          <div style="padding: 8px; max-width: 200px;">
+          <div style="padding: 12px; max-width: 250px; font-family: system-ui, -apple-system, sans-serif;">
             <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: bold;">${donation.title}</h3>
-            <p style="margin: 0 0 4px 0; font-size: 14px; color: #666;">${donation.quantity}</p>
-            <p style="margin: 0 0 4px 0; font-size: 12px; color: #888;">By: ${donation.donorName}</p>
+            <div style="margin: 8px 0; padding: 8px; background: #f9fafb; border-radius: 6px;">
+              <p style="margin: 0 0 4px 0; font-size: 14px; color: #374151;"><strong>Quantity:</strong> ${donation.quantity}</p>
+              <p style="margin: 0 0 4px 0; font-size: 14px; color: #374151;"><strong>Pickup:</strong> ${donation.pickupWindow.start} - ${donation.pickupWindow.end}</p>
+              <p style="margin: 0; font-size: 12px; color: #6b7280;">By: ${donation.donorName}</p>
+            </div>
             <div style="margin-top: 8px;">
-              <span style="display: inline-block; padding: 2px 6px; background: ${getMarkerColor(donation.status)}; color: white; border-radius: 4px; font-size: 11px; text-transform: uppercase;">
+              <span style="display: inline-block; padding: 4px 8px; background: ${getMarkerColor(donation.status)}; color: white; border-radius: 6px; font-size: 12px; font-weight: 500; text-transform: uppercase;">
                 ${donation.status}
               </span>
             </div>
@@ -147,6 +151,10 @@ export const FoodMap: React.FC<FoodMapProps> = ({ donations, onMarkerClick, sele
             (m as any).infoWindow.close();
           }
         });
+        
+        // Add bounce animation
+        marker.setAnimation(window.google.maps.Animation.BOUNCE);
+        setTimeout(() => marker.setAnimation(null), 2000);
         
         infoWindow.open(mapInstanceRef.current, marker);
         (marker as any).infoWindow = infoWindow;
@@ -181,7 +189,7 @@ export const FoodMap: React.FC<FoodMapProps> = ({ donations, onMarkerClick, sele
   return (
     <div 
       ref={mapRef} 
-      className="w-full h-96 rounded-lg shadow-md"
+      className="w-full h-96 rounded-lg shadow-md border border-gray-200"
       style={{ minHeight: '400px' }}
     />
   );

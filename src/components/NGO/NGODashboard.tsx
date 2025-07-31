@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Map, List, Navigation, Heart, Package, TrendingUp } from 'lucide-react';
+import { Map, List, Navigation, Heart, Package, TrendingUp, Route } from 'lucide-react';
 import { collection, query, where, orderBy, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import { useAuth } from '../../hooks/useAuth';
@@ -7,6 +7,8 @@ import { FoodDonation } from '../../types';
 import { Navbar } from '../Layout/Navbar';
 import { FoodMap } from './FoodMap';
 import { DonationListItem } from './DonationListItem';
+import { MultiLocationSelector } from './MultiLocationSelector';
+import { RouteTracker } from './RouteTracker';
 
 export const NGODashboard: React.FC = () => {
   const { user } = useAuth();
@@ -17,6 +19,9 @@ export const NGODashboard: React.FC = () => {
   const [filter, setFilter] = useState('all');
   const [loading, setLoading] = useState(true);
   const [myDonations, setMyDonations] = useState<FoodDonation[]>([]);
+  const [showMultiSelector, setShowMultiSelector] = useState(false);
+  const [showRouteTracker, setShowRouteTracker] = useState(false);
+  const [selectedRouteData, setSelectedRouteData] = useState<FoodDonation[]>([]);
 
   useEffect(() => {
     // Listen to all available donations
@@ -117,6 +122,27 @@ export const NGODashboard: React.FC = () => {
     }
   };
 
+  const handleStartMultiPickup = () => {
+    const availableDonations = donations.filter(d => 
+      d.status === 'available' && new Date(d.expiryTime) > new Date()
+    );
+    if (availableDonations.length > 0) {
+      setShowMultiSelector(true);
+    }
+  };
+
+  const handleStartRoute = (selectedDonations: FoodDonation[]) => {
+    setSelectedRouteData(selectedDonations);
+    setShowMultiSelector(false);
+    setShowRouteTracker(true);
+  };
+
+  const handleRouteComplete = () => {
+    setShowRouteTracker(false);
+    setSelectedRouteData([]);
+    // Refresh data or show success message
+  };
+
   const stats = {
     available: donations.filter(d => d.status === 'available' && new Date(d.expiryTime) > new Date()).length,
     claimed: myDonations.filter(d => d.status === 'claimed').length,
@@ -182,7 +208,7 @@ export const NGODashboard: React.FC = () => {
 
         {/* Controls */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-4 sm:space-y-0">
-          <div className="flex space-x-2">
+          <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setViewMode('map')}
               className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors ${
@@ -204,6 +230,17 @@ export const NGODashboard: React.FC = () => {
             >
               <List className="h-4 w-4" />
               <span>List View</span>
+            </button>
+            <button
+              onClick={handleStartMultiPickup}
+              disabled={stats.available === 0}
+              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <Route className="h-4 w-4" />
+              <span>Multi Pickup</span>
+              {stats.available > 0 && (
+                <span className="bg-blue-500 text-xs px-2 py-1 rounded-full">{stats.available}</span>
+              )}
             </button>
           </div>
 
@@ -276,6 +313,24 @@ export const NGODashboard: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Multi Location Selector Modal */}
+      {showMultiSelector && (
+        <MultiLocationSelector
+          donations={donations.filter(d => d.status === 'available' && new Date(d.expiryTime) > new Date())}
+          onStartRoute={handleStartRoute}
+          onClose={() => setShowMultiSelector(false)}
+        />
+      )}
+
+      {/* Route Tracker */}
+      {showRouteTracker && (
+        <RouteTracker
+          donations={selectedRouteData}
+          onComplete={handleRouteComplete}
+          onClose={() => setShowRouteTracker(false)}
+        />
+      )}
     </div>
   );
 };

@@ -1,6 +1,7 @@
 import React from 'react';
-import { MapPin, Clock, Package, User, Navigation } from 'lucide-react';
+import { MapPin, Clock, Package, User, Navigation, CheckCircle } from 'lucide-react';
 import { FoodDonation } from '../../types';
+import { useAuth } from '../../hooks/useAuth';
 
 interface DonationListItemProps {
   donation: FoodDonation;
@@ -15,6 +16,8 @@ export const DonationListItem: React.FC<DonationListItemProps> = ({
   onViewRoute, 
   distance 
 }) => {
+  const { user } = useAuth();
+  
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'available':
@@ -95,9 +98,10 @@ export const DonationListItem: React.FC<DonationListItemProps> = ({
         {donation.status === 'claimed' && donation.claimedBy === user?.uid && (
           <button
             onClick={() => onViewRoute(donation)}
-            className="flex-1 px-3 py-2 text-sm font-medium text-white bg-orange-600 rounded-lg hover:bg-orange-700 transition-colors"
+            className="flex-1 flex items-center justify-center space-x-2 px-3 py-2 text-sm font-medium text-white bg-orange-600 rounded-lg hover:bg-orange-700 transition-colors"
             title="Navigate to pickup location"
           >
+            <CheckCircle className="h-4 w-4" />
             Pickup Now
           </button>
         )}

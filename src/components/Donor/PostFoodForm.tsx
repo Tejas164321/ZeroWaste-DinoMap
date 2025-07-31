@@ -88,8 +88,7 @@ export const PostFoodForm: React.FC<PostFoodFormProps> = ({ onClose, onSuccess }
       formData.expiryTime !== '' &&
       formData.pickupStart !== '' &&
       formData.pickupEnd !== '' &&
-      formData.address.trim() !== '' &&
-      currentLocation !== null
+      formData.address.trim() !== ''
     );
   };
 
