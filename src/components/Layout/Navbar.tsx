@@ -27,7 +27,7 @@ export const Navbar: React.FC<NavbarProps> = ({ title }) => {
           <div className="flex items-center">
             <div className="flex-shrink-0 flex items-center">
               <MapPin className="h-8 w-8 text-green-600" />
-              <span className="ml-2 text-xl font-bold text-gray-900">ZeroWaste DineMap</span>
+              <span className="ml-2 text-xl font-bold text-gray-900">Left2Lift</span>
             </div>
             <div className="ml-8">
               <h1 className="text-lg font-semibold text-gray-700">{title}</h1>

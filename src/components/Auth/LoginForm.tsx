@@ -43,7 +43,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToSignup }) => {
           <MapPin className="h-12 w-12 text-green-600" />
         </div>
         <h2 className="text-3xl font-bold text-gray-900">Welcome Back</h2>
-        <p className="text-gray-600 mt-2">Sign in to your ZeroWaste DineMap account</p>
+        <p className="text-gray-600 mt-2">Sign in to your Left2Lift account</p>
       </div>
 
       {error && (

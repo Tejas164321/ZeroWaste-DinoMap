@@ -292,21 +292,21 @@ export const NGODashboard: React.FC = () => {
                 selectedDonation={selectedDonation}
               />
               {selectedDonation && (
-                <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                  <h3 className="font-semibold text-lg mb-2">{selectedDonation.title}</h3>
-                  <p className="text-gray-600 mb-2">{selectedDonation.description}</p>
-                  <div className="flex space-x-4">
+                <div className="mt-2 p-2 bg-gray-50 rounded-md max-w-xs">
+                  <h3 className="font-semibold text-base mb-1 truncate">{selectedDonation.title}</h3>
+                  <p className="text-gray-600 mb-1 text-sm truncate">{selectedDonation.description}</p>
+                  <div className="flex space-x-2">
                     <button
                       onClick={() => handleViewRoute(selectedDonation)}
-                      className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                      className="flex items-center space-x-1 px-2 py-1 text-xs font-medium text-blue-600 bg-blue-50 rounded-md hover:bg-blue-100 transition-colors"
                     >
-                      <Navigation className="h-4 w-4" />
+                      <Navigation className="h-3 w-3" />
                       <span>Get Directions</span>
                     </button>
                     {selectedDonation.status === 'available' && (
                       <button
                         onClick={() => handleClaimDonation(selectedDonation)}
-                        className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors"
+                        className="px-2 py-1 text-xs font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition-colors"
                       >
                         Claim Donation
                       </button>

@@ -21,8 +21,9 @@ export const RouteTracker: React.FC<RouteTrackerProps> = ({
   const directionsRendererRef = useRef<google.maps.DirectionsRenderer | null>(null);
   
   const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [currentDonationIndex, setCurrentDonationIndex] = useState(0);
+  // Removed unused currentDonationIndex state
   const [completedDonations, setCompletedDonations] = useState<string[]>([]);
+  const [claimedDonationsHistory, setClaimedDonationsHistory] = useState<FoodDonation[]>([]);
   const [progress, setProgress] = useState(0);
   const [showCelebration, setShowCelebration] = useState(false);
   const [estimatedTime, setEstimatedTime] = useState<string>('');
@@ -117,6 +118,11 @@ export const RouteTracker: React.FC<RouteTrackerProps> = ({
   };
 
   const handleClaimDonation = (donation: FoodDonation) => {
+    // Set status as claimed and add to history
+    const claimedDonation: FoodDonation = { ...donation, status: 'claimed' };
+    setClaimedDonationsHistory(prev => [...prev, claimedDonation]);
+
+    // Mark donation as completed by id
     setCompletedDonations(prev => [...prev, donation.id]);
     
     const newProgress = ((completedDonations.length + 1) / donations.length) * 100;
@@ -128,8 +134,6 @@ export const RouteTracker: React.FC<RouteTrackerProps> = ({
       setTimeout(() => {
         onComplete();
       }, 3000);
-    } else {
-      setCurrentDonationIndex(prev => prev + 1);
     }
   };
 
@@ -209,44 +213,62 @@ export const RouteTracker: React.FC<RouteTrackerProps> = ({
       <div className="flex-1 relative">
         <div ref={mapRef} className="w-full h-full" />
         
-        {/* Current Donation Card */}
-        {currentDonation && (
-          <div className="absolute bottom-4 left-4 right-4 bg-white rounded-lg shadow-lg p-4">
-            <div className="flex items-start justify-between mb-3">
-              <div>
-                <h3 className="font-semibold text-lg text-gray-900">{currentDonation.title}</h3>
-                <p className="text-gray-600 text-sm">By: {currentDonation.donorName}</p>
-              </div>
-              <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
-                Next Pickup
-              </span>
+      {/* Current Donation Card */}
+      {currentDonation && (
+        <div className="absolute bottom-4 left-4 right-4 bg-white rounded-lg shadow-lg p-3 max-h-48 sm:max-h-56 overflow-y-auto">
+          <div className="flex items-start justify-between mb-3">
+            <div>
+              <h3 className="font-semibold text-lg text-gray-900">{currentDonation.title}</h3>
+              <p className="text-gray-600 text-sm">By: {currentDonation.donorName}</p>
             </div>
-
-            <div className="grid grid-cols-2 gap-4 mb-4 text-sm text-gray-600">
-              <div className="flex items-center space-x-2">
-                <Package className="h-4 w-4" />
-                <span>{currentDonation.quantity}</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Clock className="h-4 w-4" />
-                <span>{currentDonation.pickupWindow.start} - {currentDonation.pickupWindow.end}</span>
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-2 mb-4 text-sm text-gray-600">
-              <MapPin className="h-4 w-4" />
-              <span>{currentDonation.location.address}</span>
-            </div>
-
-            <button
-              onClick={() => handleClaimDonation(currentDonation)}
-              className="w-full bg-green-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center justify-center space-x-2"
-            >
-              <CheckCircle className="h-5 w-5" />
-              <span>Mark as Collected</span>
-            </button>
+            <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+              Next Pickup
+            </span>
           </div>
-        )}
+
+          <div className="grid grid-cols-2 gap-4 mb-4 text-sm text-gray-600">
+            <div className="flex items-center space-x-2">
+              <Package className="h-4 w-4" />
+              <span>{currentDonation.quantity}</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Clock className="h-4 w-4" />
+              <span>{currentDonation.pickupWindow.start} - {currentDonation.pickupWindow.end}</span>
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-2 mb-4 text-sm text-gray-600">
+            <MapPin className="h-4 w-4" />
+            <span>{currentDonation.location.address}</span>
+          </div>
+
+          <button
+            onClick={() => handleClaimDonation(currentDonation)}
+            className="w-full bg-green-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center justify-center space-x-2"
+          >
+            <CheckCircle className="h-5 w-5" />
+            <span>Mark as Collected</span>
+          </button>
+        </div>
+      )}
+      {/* Claimed Donations History */}
+      {claimedDonationsHistory.length > 0 && (
+        <div className="bg-gray-100 p-4 mt-4 rounded-lg max-h-48 overflow-y-auto">
+          <h4 className="text-sm font-medium text-gray-700 mb-2">Claimed Donations History</h4>
+          <div className="space-y-2 text-gray-600 text-sm">
+            {claimedDonationsHistory.map(donation => (
+              <div key={donation.id} className="p-2 bg-white rounded shadow-sm cursor-default select-none">
+                <div className="font-semibold">{donation.title}</div>
+                <div>By: {donation.donorName}</div>
+                <div>Quantity: {donation.quantity}</div>
+                <div>Pickup Window: {donation.pickupWindow.start} - {donation.pickupWindow.end}</div>
+                <div>Address: {donation.location.address}</div>
+                <div className="text-green-600 font-medium mt-1">Status: Claimed</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       </div>
 
       {/* Completed Donations List */}
