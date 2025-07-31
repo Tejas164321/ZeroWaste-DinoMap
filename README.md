@@ -1,6 +1,5 @@
-# ZeroWaste DineMao
-
-**Bridging the gap between excess food and empty plates. ZeroWaste DineMao is a web platform that connects restaurants with surplus food to NGOs, facilitating efficient collection and distribution to combat hunger and reduce waste.**
+# Left2Lift
+**Bridging the gap between excess food and empty plates. Left2Lift is a web platform that connects restaurants with surplus food to NGOs, facilitating efficient collection and distribution to combat hunger and reduce waste.**
 
 ---
 
@@ -24,7 +23,7 @@ The restaurant and hospitality industry is a significant contributor to this par
 
 ## 💡 Our Solution
 
-**ZeroWaste DineMao** tackles this challenge head-on by creating a seamless, real-time logistics platform designed for speed and efficiency. We provide a simple, intuitive interface for two key user groups, closing the loop between food surplus and food scarcity:
+**Left2Lift** tackles this challenge head-on by creating a seamless, real-time logistics platform designed for speed and efficiency. We provide a simple, intuitive interface for two key user groups, closing the loop between food surplus and food scarcity:
 
 1.  **Restaurants & Food Donors:** Can quickly and easily list surplus food items that are available for pickup, specifying the quantity, type, and a convenient pickup window. This takes only minutes, turning potential waste into a valuable donation.
 2.  **NGOs & Community Organizations:** Receive instant, geo-targeted notifications about available food in their vicinity. They can accept pickup requests with a single click and use an optimized routing system to collect the food efficiently, maximizing the number of pickups they can handle.
