@@ -25,8 +25,7 @@ export const useGoogleMaps = () => {
         }
 
         const script = document.createElement('script');
-        const googleMapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${googleMapsApiKey}&libraries=places,geometry`;
+        script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyDf1vfB2AGpVCGh1fdwB5mMZ-ClAnYh0ic&libraries=places,geometry`;
         script.async = true;
         script.defer = true;
 
