@@ -40,7 +40,8 @@ export const FoodMap: React.FC<FoodMapProps> = ({ donations, onMarkerClick, sele
           }
           console.error('Error getting location:', errorMessage, error);
           // Default to a center location if geolocation fails
-          setCurrentLocation({ lat: 40.7128, lng: -74.0060 }); // New York City
+          setCurrentLocation({ lat: 18.5204, lng: 73.8567 }); // Pune
+
         }
       );
     }
