@@ -5,12 +5,12 @@ import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
   // These would be replaced with actual Firebase config
-  apiKey: "AIzaSyBI3GYWgNZhSpRAOlIyJDxiZQ1tZ79F9bg",
-  authDomain: "zerowaste-dinemap.firebaseapp.com",
-  projectId: "zerowaste-dinemap",
-  storageBucket: "zerowaste-dinemap.firebasestorage.app",
-  messagingSenderId: "768289040435",
-  appId: "1:768289040435:web:710f917125192464839b46"
+  apiKey: ,
+  authDomain: ,
+  projectId: ,
+  storageBucket: ,
+  messagingSenderId: ,
+  appId:
 };
 
 // Initialize Firebase
