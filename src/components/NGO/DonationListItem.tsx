@@ -76,17 +76,29 @@ export const DonationListItem: React.FC<DonationListItemProps> = ({
         <button
           onClick={() => onViewRoute(donation)}
           className="flex-1 flex items-center justify-center space-x-2 px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+          title="Get directions to pickup location"
         >
           <Navigation className="h-4 w-4" />
-          <span>Route</span>
+          <span>Navigate</span>
         </button>
         
         {isAvailable && (
           <button
             onClick={() => onClaim(donation)}
             className="flex-1 px-3 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors"
+            title="Claim this donation"
           >
             Claim
+          </button>
+        )}
+        
+        {donation.status === 'claimed' && donation.claimedBy === user?.uid && (
+          <button
+            onClick={() => onViewRoute(donation)}
+            className="flex-1 px-3 py-2 text-sm font-medium text-white bg-orange-600 rounded-lg hover:bg-orange-700 transition-colors"
+            title="Navigate to pickup location"
+          >
+            Pickup Now
           </button>
         )}
       </div>

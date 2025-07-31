@@ -101,10 +101,17 @@ export const NGODashboard: React.FC = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition((position) => {
         const { latitude, longitude } = position.coords;
-        const url = `https://www.google.com/maps/dir/${latitude},${longitude}/${donation.location.lat},${donation.location.lng}`;
+        // Open in Google Maps with turn-by-turn navigation
+        const url = `https://www.google.com/maps/dir/${latitude},${longitude}/${donation.location.lat},${donation.location.lng}/@${donation.location.lat},${donation.location.lng},15z/data=!4m2!4m1!3e0`;
+        window.open(url, '_blank');
+      }, (error) => {
+        console.error('Error getting current location:', error);
+        // Fallback: open destination directly
+        const url = `https://www.google.com/maps/search/${donation.location.address}`;
         window.open(url, '_blank');
       });
     } else {
+      // Fallback for browsers without geolocation
       const url = `https://www.google.com/maps/search/${donation.location.address}`;
       window.open(url, '_blank');
     }

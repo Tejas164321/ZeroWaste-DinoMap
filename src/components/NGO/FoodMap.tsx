@@ -151,6 +151,9 @@ export const FoodMap: React.FC<FoodMapProps> = ({ donations, onMarkerClick, sele
         infoWindow.open(mapInstanceRef.current, marker);
         (marker as any).infoWindow = infoWindow;
         onMarkerClick(donation);
+        
+        // Pan to marker location
+        mapInstanceRef.current?.panTo({ lat: donation.location.lat, lng: donation.location.lng });
       });
 
       markersRef.current.push(marker);

@@ -3,6 +3,7 @@ import { Plus, MapPin, Clock, Package, Calendar, AlertCircle } from 'lucide-reac
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import { useAuth } from '../../hooks/useAuth';
+import { useGoogleMaps } from '../../hooks/useGoogleMaps';
 import { FoodDonation } from '../../types';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -13,9 +14,12 @@ interface PostFoodFormProps {
 
 export const PostFoodForm: React.FC<PostFoodFormProps> = ({ onClose, onSuccess }) => {
   const { user } = useAuth();
+  const { isLoaded } = useGoogleMaps();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number; address: string } | null>(null);
+  const [autocomplete, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
+  const [addressInputRef, setAddressInputRef] = useState<HTMLInputElement | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -26,6 +30,30 @@ export const PostFoodForm: React.FC<PostFoodFormProps> = ({ onClose, onSuccess }
     pickupEnd: '',
     address: '',
   });
+
+  useEffect(() => {
+    // Initialize Google Places Autocomplete
+    if (isLoaded && addressInputRef && !autocomplete) {
+      const autocompleteInstance = new window.google.maps.places.Autocomplete(addressInputRef, {
+        types: ['establishment', 'geocode'],
+        componentRestrictions: { country: 'in' }, // Restrict to India, change as needed
+      });
+
+      autocompleteInstance.addListener('place_changed', () => {
+        const place = autocompleteInstance.getPlace();
+        if (place.geometry && place.geometry.location) {
+          const lat = place.geometry.location.lat();
+          const lng = place.geometry.location.lng();
+          const address = place.formatted_address || place.name || '';
+          
+          setCurrentLocation({ lat, lng, address });
+          setFormData(prev => ({ ...prev, address }));
+        }
+      });
+
+      setAutocomplete(autocompleteInstance);
+    }
+  }, [isLoaded, addressInputRef, autocomplete]);
 
   useEffect(() => {
     // Get current location
@@ -51,6 +79,19 @@ export const PostFoodForm: React.FC<PostFoodFormProps> = ({ onClose, onSuccess }
       );
     }
   }, []);
+
+  // Check if form is valid
+  const isFormValid = () => {
+    return (
+      formData.title.trim() !== '' &&
+      formData.quantity.trim() !== '' &&
+      formData.expiryTime !== '' &&
+      formData.pickupStart !== '' &&
+      formData.pickupEnd !== '' &&
+      formData.address.trim() !== '' &&
+      currentLocation !== null
+    );
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -236,15 +277,16 @@ export const PostFoodForm: React.FC<PostFoodFormProps> = ({ onClose, onSuccess }
               <input
                 type="text"
                 name="address"
+                ref={setAddressInputRef}
                 value={formData.address}
                 onChange={handleChange}
                 required
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                placeholder="Address for pickup"
+                placeholder="Start typing address for suggestions..."
               />
               {currentLocation && (
                 <p className="text-sm text-gray-500 mt-1">
-                  Current location detected and set as pickup point
+                  Location confirmed: {currentLocation.address}
                 </p>
               )}
             </div>
@@ -260,7 +302,7 @@ export const PostFoodForm: React.FC<PostFoodFormProps> = ({ onClose, onSuccess }
             </button>
             <button
               type="submit"
-              disabled={loading || !currentLocation}
+              disabled={loading || !isFormValid()}
               className="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? 'Posting...' : 'Post Food Donation'}
