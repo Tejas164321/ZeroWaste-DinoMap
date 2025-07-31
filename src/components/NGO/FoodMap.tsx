@@ -26,7 +26,19 @@ export const FoodMap: React.FC<FoodMapProps> = ({ donations, onMarkerClick, sele
           });
         },
         (error) => {
-          console.error('Error getting location:', error);
+          let errorMessage = 'Unknown geolocation error';
+          switch (error.code) {
+            case error.PERMISSION_DENIED:
+              errorMessage = 'Location access denied by user';
+              break;
+            case error.POSITION_UNAVAILABLE:
+              errorMessage = 'Location information unavailable';
+              break;
+            case error.TIMEOUT:
+              errorMessage = 'Location request timed out';
+              break;
+          }
+          console.error('Error getting location:', errorMessage, error);
           // Default to a center location if geolocation fails
           setCurrentLocation({ lat: 40.7128, lng: -74.0060 }); // New York City
         }
