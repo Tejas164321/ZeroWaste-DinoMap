@@ -54,9 +54,3 @@ export const useGoogleMaps = () => {
 
   return { isLoaded, loadError };
 };
-      }
-    };
-  }, []);
-
-  return { isLoaded, loadError };
-};
